@@ -58,7 +58,7 @@ php -S localhost:8000 -t .
 
 ## Deploy en Hostinger
 1. Crear base MySQL en Hostinger.
-2. Importar `sql/init.sql`.
+2. Importar `sql/hostinger_import.sql` desde phpMyAdmin. Este archivo ya viene preparado para Hostinger y no incluye `CREATE DATABASE` ni `USE`.
 3. Subir todos los archivos por File Manager o FTP.
 4. Configurar document root:
 - Opción A: raíz del dominio al proyecto completo.
