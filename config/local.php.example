@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'app_name' => 'Pase Evita',
+    'app.base_url' => 'https://evitabar.click',
+    'app.timezone' => 'America/Argentina/Catamarca',
+    'session.secure' => true,
+    'session.samesite' => 'Lax',
+    'db.host' => 'localhost',
+    'db.port' => '3306',
+    'db.name' => 'u260008524_evitabar',
+    'db.user' => 'u260008524_evitabar',
+    'db.pass' => 'Evita2626!',
+];

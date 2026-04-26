@@ -1,4 +1,5 @@
 .DS_Store
 .env
+config/local.php
 *.log
 node_modules/
