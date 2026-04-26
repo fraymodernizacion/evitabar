@@ -3,6 +3,13 @@
 declare(strict_types=1);
 
 $appConfig = require __DIR__ . '/../config/app.php';
+
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
+
 $appName = setting('program_name', $appConfig['app_name']) ?? $appConfig['app_name'];
 $pageTitle = $pageTitle ?? $appName;
 $bodyClass = $bodyClass ?? '';
