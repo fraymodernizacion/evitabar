@@ -1,0 +1,23 @@
+{
+  "name": "Pase Evita",
+  "short_name": "Pase Evita",
+  "description": "Programa de fidelización de Evita Bar",
+  "start_url": "/public/index.php",
+  "display": "standalone",
+  "background_color": "#0f1b2d",
+  "theme_color": "#0f1b2d",
+  "icons": [
+    {
+      "src": "/public/assets/icons/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/assets/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
