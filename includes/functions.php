@@ -133,6 +133,72 @@ function user_full_name(array $user): string
     return trim((string) ($user['name'] ?? ''));
 }
 
+function userRequiresPasswordChange(int $userId): bool
+{
+    $stmt = db()->prepare('SELECT password_reset_required FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $userId]);
+    $user = $stmt->fetch();
+
+    return !empty($user) && (int) $user['password_reset_required'] === 1;
+}
+
+function adminResetUserPassword(int $userId, int $adminId): array
+{
+    $stmt = db()->prepare('SELECT id, dni, role FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $userId]);
+    $user = $stmt->fetch();
+
+    if (!$user) {
+        return ['ok' => false, 'message' => 'Cliente no encontrado.'];
+    }
+
+    if (($user['role'] ?? 'client') !== 'client') {
+        return ['ok' => false, 'message' => 'Solo podés restablecer la clave de clientes.'];
+    }
+
+    $temporaryPassword = (string) ($user['dni'] ?? '');
+    if ($temporaryPassword === '') {
+        return ['ok' => false, 'message' => 'No se pudo generar la clave temporal.'];
+    }
+
+    $update = db()->prepare(
+        'UPDATE users
+         SET password_hash = :password_hash,
+             password_reset_required = 1,
+             password_reset_at = NOW(),
+             password_reset_by = :admin_id,
+             updated_at = NOW()
+         WHERE id = :id'
+    );
+    $update->execute([
+        'password_hash' => password_hash($temporaryPassword, PASSWORD_DEFAULT),
+        'admin_id' => $adminId,
+        'id' => $userId,
+    ]);
+
+    return [
+        'ok' => true,
+        'message' => 'Clave restablecida. La clave temporal quedó configurada con el DNI del cliente.',
+    ];
+}
+
+function updateUserPassword(int $userId, string $newPassword): void
+{
+    $stmt = db()->prepare(
+        'UPDATE users
+         SET password_hash = :password_hash,
+             password_reset_required = 0,
+             password_reset_at = NULL,
+             password_reset_by = NULL,
+             updated_at = NOW()
+         WHERE id = :id'
+    );
+    $stmt->execute([
+        'password_hash' => password_hash($newPassword, PASSWORD_DEFAULT),
+        'id' => $userId,
+    ]);
+}
+
 function level_thresholds(): array
 {
     return [

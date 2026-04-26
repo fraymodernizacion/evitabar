@@ -73,6 +73,16 @@ function require_login(array $roles = ['client', 'staff', 'admin']): array
         exit('No tenés permisos para acceder a esta sección.');
     }
 
+    $scriptName = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (
+        $user['role'] === 'client'
+        && userRequiresPasswordChange((int) $user['id'])
+        && !in_array($scriptName, ['change-password.php', 'login.php', 'logout.php'], true)
+    ) {
+        header('Location: /public/change-password.php');
+        exit;
+    }
+
     return $user;
 }
 

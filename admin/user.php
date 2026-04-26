@@ -20,6 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action']) && !empty(
     $userId = (int) $_POST['user_id'];
     $action = (string) $_POST['action'];
 
+    if ($action === 'reset_password') {
+        $result = adminResetUserPassword($userId, (int) $staff['id']);
+        flash($result['ok'] ? 'success' : 'error', $result['message']);
+    }
+
     if ($action === 'register_visit') {
         $force = isset($_POST['force']) && $_POST['force'] === '1';
         $notes = trim((string) ($_POST['notes'] ?? ''));
@@ -84,9 +89,20 @@ require __DIR__ . '/../includes/header.php';
     <h3><?= e($selectedUser['name']) ?></h3>
     <p class="muted">DNI <?= e($selectedUser['dni']) ?> · <?= e($selectedUser['phone']) ?></p>
     <p><strong>Nivel <?= (int) $selectedUser['level'] ?></strong> · Visitas acumuladas: <?= (int) $selectedUser['visits_count'] ?></p>
+    <?php if (userRequiresPasswordChange((int) $selectedUser['id'])): ?>
+        <p class="muted"><strong>Clave temporal activa:</strong> el cliente debe crear una nueva al ingresar.</p>
+    <?php endif; ?>
 </section>
 
 <section class="card action-grid">
+    <form method="post" class="form-grid">
+        <?= csrf_field() ?>
+        <input type="hidden" name="user_id" value="<?= (int) $selectedUser['id'] ?>">
+        <input type="hidden" name="action" value="reset_password">
+        <p class="muted">Al restablecer, la clave temporal queda igual al DNI del cliente y se le pedirá crear una nueva al iniciar sesión.</p>
+        <button class="btn btn-secondary" type="submit" onclick="return confirm('¿Restablecer la clave de este cliente?');">Restablecer clave</button>
+    </form>
+
     <form method="post" class="form-grid">
         <?= csrf_field() ?>
         <input type="hidden" name="user_id" value="<?= (int) $selectedUser['id'] ?>">

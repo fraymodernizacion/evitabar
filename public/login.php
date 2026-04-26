@@ -22,6 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = current_user();
         if ($user) {
             maybeApplyQuarterlyMaintenance((int) $user['id']);
+            if (userRequiresPasswordChange((int) $user['id'])) {
+                flash('success', 'Tu clave fue restablecida. Creá una nueva para seguir.');
+                header('Location: /public/change-password.php');
+                exit;
+            }
         }
         flash('success', 'Bienvenido a Pase Evita.');
         header('Location: /public/dashboard.php');

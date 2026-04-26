@@ -10,6 +10,11 @@ if (!$user) {
     exit;
 }
 
+if ($user['role'] === 'client' && userRequiresPasswordChange((int) $user['id'])) {
+    header('Location: /public/change-password.php');
+    exit;
+}
+
 if (in_array($user['role'], ['staff', 'admin'], true)) {
     header('Location: /admin/index.php');
     exit;

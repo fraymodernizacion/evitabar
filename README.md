@@ -85,8 +85,16 @@ UPDATE settings SET setting_value='9' WHERE setting_key='level_3_min';
 - O por SQL en tabla `benefits`.
 - Los beneficios demo están pensados a partir del menú de Eva Bar e incluyen café, cumpleaños, postres, empanadas, sándwiches y una cortesía de vino, con nombres temáticos como `Dulce Federal`, `Empanada Santa Evita`, `Sándwich Cabecita Negra` y `Vino Tinto Nacional`.
 
+## Restablecer clave desde admin
+- En la ficha del cliente (`/admin/user.php?id=...`) el staff/admin puede usar `Restablecer clave`.
+- La clave temporal queda igual al DNI del cliente.
+- Al iniciar sesión con esa clave, el cliente es enviado a `/public/change-password.php` para crear una nueva.
+
 ## Migración de auditoría de nivel
 Si la base ya estaba cargada, corré `sql/migrate_level_events.sql` en phpMyAdmin para crear la tabla `level_events` y activar el aviso anticipado de revisión.
+
+## Migración de reset de clave
+Si la base ya estaba cargada, corré `sql/migrate_password_reset.sql` en phpMyAdmin para agregar los campos `password_reset_*` en `users`.
 
 ## Nota sobre QR
 La generación se resuelve con helper PHP embebido (`lib/qrcode/EmbeddedQr.php`) que usa un endpoint de render para obtener PNG y embebe el resultado como `data:image`.
