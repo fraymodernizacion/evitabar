@@ -10,6 +10,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const phoneInput = document.querySelector('input[name="phone"]');
   const dniInput = document.querySelector('input[name="dni"]');
   const toggleButtons = document.querySelectorAll('[data-password-toggle]');
+  const carousel = document.querySelector('[data-benefit-carousel]');
 
   if (phoneInput) {
     const sanitizePhone = () => {
@@ -47,4 +48,63 @@ window.addEventListener('DOMContentLoaded', () => {
       button.textContent = isHidden ? '🙈' : '👁';
     });
   });
+
+  if (carousel) {
+    const track = carousel.querySelector('[data-benefit-track]');
+    const tabs = Array.from(carousel.querySelectorAll('[data-benefit-tab]'));
+    const slides = Array.from(carousel.querySelectorAll('[data-benefit-slide]'));
+    const dots = Array.from(carousel.querySelectorAll('[data-benefit-dot]'));
+
+    const setActive = (level) => {
+      tabs.forEach((tab) => {
+        const isActive = Number(tab.dataset.benefitTab) === level;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      dots.forEach((dot) => {
+        const isActive = Number(dot.dataset.benefitDot) === level;
+        dot.classList.toggle('dot-active', isActive);
+      });
+    };
+
+    const scrollToLevel = (level) => {
+      const slide = slides.find((item) => Number(item.dataset.benefitSlide) === level);
+      if (!slide || !track) {
+        return;
+      }
+
+      track.scrollTo({
+        left: slide.offsetLeft,
+        behavior: 'smooth',
+      });
+      setActive(level);
+    };
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        scrollToLevel(Number(tab.dataset.benefitTab));
+      });
+    });
+
+    let scrollTimer = null;
+    track?.addEventListener('scroll', () => {
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        const trackRect = track.getBoundingClientRect();
+        const centered = slides
+          .map((slide) => ({
+            level: Number(slide.dataset.benefitSlide),
+            distance: Math.abs(slide.getBoundingClientRect().left - trackRect.left),
+          }))
+          .sort((a, b) => a.distance - b.distance)[0];
+
+        if (centered) {
+          setActive(centered.level);
+        }
+      }, 80);
+    });
+
+    setActive(1);
+  }
 });

@@ -512,6 +512,19 @@ function userRedemptionHistory(int $userId, int $limit = 8): array
     return $stmt->fetchAll();
 }
 
+function userRedeemedBenefitIds(int $userId): array
+{
+    $stmt = db()->prepare('SELECT DISTINCT benefit_id FROM redemptions WHERE user_id = :user_id');
+    $stmt->execute(['user_id' => $userId]);
+
+    $map = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $map[(int) $row['benefit_id']] = true;
+    }
+
+    return $map;
+}
+
 function userLevelEvents(int $userId, int $limit = 8): array
 {
     $stmt = db()->prepare(

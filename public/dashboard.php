@@ -10,7 +10,8 @@ $user = getUserById((int) $user['id']) ?? $user;
 
 $progress = getVisitsNeededForNextAndMaintain((int) $user['id']);
 $maintenanceStatus = getMaintenanceStatusForUser((int) $user['id']);
-$activeBenefits = getUserActiveBenefits((int) $user['level']);
+$benefitsByLevel = activeBenefitsByLevel();
+$redeemedBenefitIds = userRedeemedBenefitIds((int) $user['id']);
 $levelThresholds = level_thresholds();
 $appName = setting('program_name', 'Pase Evita') ?? 'Pase Evita';
 
@@ -34,7 +35,6 @@ $heroSubtitle = (int) $user['level'] === 3
 $heroHint = (int) $user['level'] === 3
     ? sprintf('Tus visitas se revisan cada %s meses.', setting('maintenance_period_months', '3'))
     : 'para llegar al Nivel 3.';
-$heroBenefits = array_slice($activeBenefits, 0, 4);
 
 $maintenanceWarning = null;
 if (!empty($maintenanceStatus['needs_warning']) && isset($maintenanceStatus['days_left'])) {
@@ -83,23 +83,74 @@ require __DIR__ . '/../includes/header.php';
                 <small><?= e($heroHint) ?></small>
             </div>
 
-            <div class="benefits-panel">
-                <ul class="benefits-mini-list">
-                    <?php foreach ($heroBenefits as $benefit): ?>
-                        <li>
-                            <span class="benefit-dot">★</span>
-                            <div>
-                                <strong><?= e($benefit['title']) ?></strong>
-                                <p><?= e($benefit['conditions'] ?: $benefit['description']) ?></p>
+            <div class="benefits-panel benefits-carousel" data-benefit-carousel>
+                <div class="benefits-carousel-tabs" role="tablist" aria-label="Beneficios por nivel">
+                    <?php for ($carouselLevel = 1; $carouselLevel <= 3; $carouselLevel++): ?>
+                        <button
+                            type="button"
+                            class="benefit-tab<?= $carouselLevel === 1 ? ' is-active' : '' ?>"
+                            data-benefit-tab="<?= $carouselLevel ?>"
+                            role="tab"
+                            aria-controls="benefit-slide-<?= $carouselLevel ?>"
+                            aria-selected="<?= $carouselLevel === 1 ? 'true' : 'false' ?>"
+                        >
+                            Nivel <?= $carouselLevel ?>
+                        </button>
+                    <?php endfor; ?>
+                </div>
+
+                <div class="benefits-carousel-track" data-benefit-track tabindex="0">
+                    <?php for ($carouselLevel = 1; $carouselLevel <= 3; $carouselLevel++): ?>
+                        <?php
+                        $slideBenefits = $benefitsByLevel[$carouselLevel] ?? [];
+                        $isAvailable = (int) $user['level'] >= $carouselLevel;
+                        $statusLabel = $isAvailable ? 'Disponible para vos' : 'Se desbloquea al subir';
+                        ?>
+                        <article
+                            id="benefit-slide-<?= $carouselLevel ?>"
+                            class="benefit-slide"
+                            data-benefit-slide="<?= $carouselLevel ?>"
+                            role="tabpanel"
+                            aria-label="Beneficios del Nivel <?= $carouselLevel ?>"
+                        >
+                            <div class="benefit-slide-head">
+                                <div>
+                                    <span class="benefit-slide-kicker">Nivel <?= $carouselLevel ?></span>
+                                    <strong><?= e($statusLabel) ?></strong>
+                                </div>
+                                <span class="benefit-slide-badge<?= $isAvailable ? ' is-on' : '' ?>">
+                                    <?= $isAvailable ? 'Activo' : 'Próximo' ?>
+                                </span>
                             </div>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+
+                            <ul class="benefit-slide-list">
+                                <?php foreach ($slideBenefits as $benefit): ?>
+                                    <?php $isRedeemed = !empty($redeemedBenefitIds[(int) $benefit['id']]); ?>
+                                    <li class="benefit-slide-item">
+                                        <span class="benefit-dot">★</span>
+                                        <div>
+                                            <div class="benefit-line">
+                                                <strong><?= e($benefit['title']) ?></strong>
+                                                <?php if ($isRedeemed): ?>
+                                                    <span class="badge badge-small badge-redeemed">Ya canjeado</span>
+                                                <?php elseif ($isAvailable): ?>
+                                                    <span class="badge badge-small">Activo</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <p><?= e($benefit['conditions'] ?: $benefit['description']) ?></p>
+                                        </div>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </article>
+                    <?php endfor; ?>
+                </div>
             </div>
 
             <div class="pager-dots" aria-hidden="true">
-                <span class="dot dot-active"></span>
-                <span class="dot"></span>
+                <span class="dot dot-active" data-benefit-dot="1"></span>
+                <span class="dot" data-benefit-dot="2"></span>
+                <span class="dot" data-benefit-dot="3"></span>
             </div>
 
             <a class="phone-cta" href="/public/qr.php">MI PASE EVITA</a>
@@ -134,34 +185,6 @@ require __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 </section>
 <?php endif; ?>
-
-<section class="card">
-    <h3>Beneficios activos</h3>
-    <?php if (empty($activeBenefits)): ?>
-        <p class="muted">Todavía no hay beneficios activos.</p>
-    <?php else: ?>
-        <ul class="benefit-list">
-            <?php foreach ($activeBenefits as $benefit): ?>
-                <li>
-                    <strong><?= e($benefit['title']) ?></strong>
-                    <p><?= e($benefit['description']) ?></p>
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
-</section>
-
-<section class="card">
-    <h3>Cómo usar tu pase</h3>
-    <ol class="steps-list">
-        <li>Mostrá tu QR desde <strong>Mi Pase Evita</strong> al llegar o cuando quieras canjear algo.</li>
-        <li>El personal registra tu visita y verifica tu nivel y beneficios activos.</li>
-        <li>Si canjeás un beneficio, queda guardado en tu historial.</li>
-    </ol>
-    <div class="bottom-cta-wrap">
-        <a class="btn btn-secondary btn-wide" href="/public/history.php">Ver historial</a>
-    </div>
-</section>
 
 <nav class="bottom-nav">
     <a href="/public/dashboard.php" class="active">Inicio</a>

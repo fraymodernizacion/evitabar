@@ -6,6 +6,7 @@ require_once __DIR__ . '/../includes/auth.php';
 
 $user = require_login(['client']);
 $grouped = activeBenefitsByLevel();
+$redeemedBenefitIds = userRedeemedBenefitIds((int) $user['id']);
 
 $pageTitle = 'Beneficios | Pase Evita';
 require __DIR__ . '/../includes/header.php';
@@ -35,10 +36,13 @@ require __DIR__ . '/../includes/header.php';
         <?php else: ?>
             <ul class="benefit-list">
                 <?php foreach ($grouped[$level] as $benefit): ?>
-                    <li class="<?= (int) $user['level'] >= $level ? 'is-active-benefit' : 'is-locked-benefit' ?>">
+                    <?php $isRedeemed = !empty($redeemedBenefitIds[(int) $benefit['id']]); ?>
+                    <li class="<?= (int) $user['level'] >= $level ? 'is-active-benefit' : 'is-locked-benefit' ?><?= $isRedeemed ? ' is-redeemed-benefit' : '' ?>">
                         <div class="benefit-line">
                             <strong><?= e($benefit['title']) ?></strong>
-                            <?php if ((int) $user['level'] >= $level): ?>
+                            <?php if ($isRedeemed): ?>
+                                <span class="badge badge-small badge-redeemed">Ya canjeado</span>
+                            <?php elseif ((int) $user['level'] >= $level): ?>
                                 <span class="badge badge-small">Activo</span>
                             <?php endif; ?>
                         </div>
