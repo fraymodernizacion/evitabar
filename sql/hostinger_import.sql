@@ -2,6 +2,7 @@
 SET NAMES utf8mb4;
 
 DROP TABLE IF EXISTS redemptions;
+DROP TABLE IF EXISTS level_events;
 DROP TABLE IF EXISTS visits;
 DROP TABLE IF EXISTS benefits;
 DROP TABLE IF EXISTS users;
@@ -39,6 +40,19 @@ CREATE TABLE visits (
   CONSTRAINT fk_visits_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_visits_staff FOREIGN KEY (staff_id) REFERENCES users(id) ON DELETE SET NULL,
   KEY idx_visits_user_date (user_id, visit_date)
+) ENGINE=InnoDB;
+
+CREATE TABLE level_events (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  previous_level TINYINT UNSIGNED NOT NULL,
+  new_level TINYINT UNSIGNED NOT NULL,
+  reason VARCHAR(60) NOT NULL,
+  recent_visits INT UNSIGNED NOT NULL DEFAULT 0,
+  maintenance_period_months INT UNSIGNED NOT NULL DEFAULT 3,
+  created_at DATETIME NOT NULL,
+  CONSTRAINT fk_level_events_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  KEY idx_level_events_user_date (user_id, created_at)
 ) ENGINE=InnoDB;
 
 CREATE TABLE benefits (
@@ -82,6 +96,7 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 ('maintenance_period_months', '3'),
 ('maintain_level_2', '2'),
 ('maintain_level_3', '3'),
+('maintenance_warning_days', '10'),
 ('visit_block_minutes', '120');
 
 INSERT INTO users (name, dni, phone, birthdate, email, password_hash, role, level, visits_count, qr_token, created_at, updated_at) VALUES

@@ -46,6 +46,7 @@ if ($selectedUser) {
 $availableBenefits = $selectedUser ? getUserActiveBenefits((int) $selectedUser['level']) : [];
 $visits = $selectedUser ? userRecentHistory((int) $selectedUser['id']) : [];
 $redemptions = $selectedUser ? userRedemptionHistory((int) $selectedUser['id']) : [];
+$levelEvents = $selectedUser ? userLevelEvents((int) $selectedUser['id']) : [];
 
 $pageTitle = 'Buscar clientes | Admin';
 require __DIR__ . '/../includes/header.php';
@@ -142,6 +143,26 @@ require __DIR__ . '/../includes/header.php';
                 <li>
                     <strong><?= e($redemption['redeemed_at']) ?> · <?= e($redemption['title']) ?></strong>
                     <p><?= e($redemption['notes'] ?? 'Sin observaciones') ?></p>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+</section>
+
+<section class="card">
+    <h3>Historial de nivel</h3>
+    <?php if (empty($levelEvents)): ?>
+        <p class="muted">Sin cambios de nivel registrados.</p>
+    <?php else: ?>
+        <ul class="timeline">
+            <?php foreach ($levelEvents as $event): ?>
+                <li>
+                    <strong><?= e($event['created_at']) ?> · Nivel <?= (int) $event['previous_level'] ?> → <?= (int) $event['new_level'] ?></strong>
+                    <p>
+                        Motivo: <?= e((string) $event['reason']) ?> ·
+                        Visitas recientes: <?= (int) $event['recent_visits'] ?> ·
+                        Período: <?= (int) $event['maintenance_period_months'] ?> meses
+                    </p>
                 </li>
             <?php endforeach; ?>
         </ul>

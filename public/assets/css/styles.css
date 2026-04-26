@@ -654,6 +654,16 @@ textarea { resize: vertical; }
 
 .alert { border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
 .alert-error { background: #f9d8d6; color: #5c1316; }
+.alert-card-warning {
+  background: #fff4db;
+  border: 1px solid #e0b84b;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+}
+
+.alert-card-warning strong {
+  display: block;
+  margin-bottom: 4px;
+}
 
 .flash-stack { display: grid; gap: 8px; margin-bottom: 10px; }
 .flash { border-radius: 12px; padding: 10px; font-size: 0.9rem; }

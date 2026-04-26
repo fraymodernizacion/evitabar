@@ -71,6 +71,7 @@ Editar tabla `settings`:
 - `level_2_min`, `level_3_min` para umbrales de ascenso.
 - `maintenance_period_months` para período de control.
 - `maintain_level_2`, `maintain_level_3` para visitas mínimas por período.
+- `maintenance_warning_days` para el aviso anticipado antes de perder el nivel.
 - `visit_block_minutes` para bloqueo anti-duplicados.
 
 Ejemplo:
@@ -83,6 +84,9 @@ UPDATE settings SET setting_value='9' WHERE setting_key='level_3_min';
 - Desde panel: `/admin/benefits.php` (crear/editar/activar/desactivar/ordenar).
 - O por SQL en tabla `benefits`.
 - Los beneficios demo están pensados a partir del menú de Eva Bar e incluyen café, cumpleaños, postres, empanadas, sándwiches y una cortesía de vino, con nombres temáticos como `Dulce Federal`, `Empanada Santa Evita`, `Sándwich Cabecita Negra` y `Vino Tinto Nacional`.
+
+## Migración de auditoría de nivel
+Si la base ya estaba cargada, corré `sql/migrate_level_events.sql` en phpMyAdmin para crear la tabla `level_events` y activar el aviso anticipado de revisión.
 
 ## Nota sobre QR
 La generación se resuelve con helper PHP embebido (`lib/qrcode/EmbeddedQr.php`) que usa un endpoint de render para obtener PNG y embebe el resultado como `data:image`.

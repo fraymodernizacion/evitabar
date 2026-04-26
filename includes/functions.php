@@ -142,6 +142,100 @@ function level_thresholds(): array
     ];
 }
 
+function maintenance_settings_for_level(int $level): array
+{
+    $periodMonths = max(1, to_int_setting('maintenance_period_months', 3));
+    $warningDays = max(1, to_int_setting('maintenance_warning_days', 10));
+    $minimum = $level === 2 ? 2 : 3;
+
+    return [
+        'period_months' => $periodMonths,
+        'warning_days' => $warningDays,
+        'minimum_visits' => max(1, to_int_setting('maintain_level_' . $level, $minimum)),
+    ];
+}
+
+function getMaintenanceStatusForUser(int $userId): array
+{
+    $stmt = db()->prepare('SELECT level FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $userId]);
+    $user = $stmt->fetch();
+
+    if (!$user) {
+        return [
+            'needs_warning' => false,
+            'days_left' => null,
+            'recent_visits' => 0,
+            'minimum_visits' => 0,
+            'period_months' => 3,
+            'current_level' => 1,
+        ];
+    }
+
+    $level = (int) $user['level'];
+    if ($level <= 1) {
+        return [
+            'needs_warning' => false,
+            'days_left' => null,
+            'recent_visits' => 0,
+            'minimum_visits' => 0,
+            'period_months' => 3,
+            'current_level' => 1,
+        ];
+    }
+
+    $settings = maintenance_settings_for_level($level);
+    $stmt = db()->prepare(
+        'SELECT visit_date
+         FROM visits
+         WHERE user_id = :user_id AND visit_date >= DATE_SUB(NOW(), INTERVAL :months MONTH)
+         ORDER BY visit_date DESC'
+    );
+    $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':months', $settings['period_months'], PDO::PARAM_INT);
+    $stmt->execute();
+    $visits = $stmt->fetchAll();
+    $recentVisits = count($visits);
+
+    $daysLeft = null;
+    if ($recentVisits >= $settings['minimum_visits']) {
+        $cutoffIndex = $settings['minimum_visits'] - 1;
+        if (!empty($visits[$cutoffIndex]['visit_date'])) {
+            $cutoff = new DateTimeImmutable((string) $visits[$cutoffIndex]['visit_date']);
+            $windowEnd = $cutoff->modify('+' . $settings['period_months'] . ' months');
+            $daysLeft = (int) ceil(($windowEnd->getTimestamp() - time()) / 86400);
+            if ($daysLeft < 0) {
+                $daysLeft = 0;
+            }
+        }
+    }
+
+    return [
+        'needs_warning' => $daysLeft !== null && $daysLeft <= $settings['warning_days'],
+        'days_left' => $daysLeft,
+        'recent_visits' => $recentVisits,
+        'minimum_visits' => $settings['minimum_visits'],
+        'period_months' => $settings['period_months'],
+        'current_level' => $level,
+    ];
+}
+
+function logLevelEvent(int $userId, int $previousLevel, int $newLevel, string $reason, int $recentVisits, int $periodMonths): void
+{
+    $stmt = db()->prepare(
+        'INSERT INTO level_events (user_id, previous_level, new_level, reason, recent_visits, maintenance_period_months, created_at)
+         VALUES (:user_id, :previous_level, :new_level, :reason, :recent_visits, :maintenance_period_months, NOW())'
+    );
+    $stmt->execute([
+        'user_id' => $userId,
+        'previous_level' => $previousLevel,
+        'new_level' => $newLevel,
+        'reason' => $reason,
+        'recent_visits' => $recentVisits,
+        'maintenance_period_months' => $periodMonths,
+    ]);
+}
+
 function calculateLevelFromVisits(int $visitsCount): int
 {
     $thresholds = level_thresholds();
@@ -241,16 +335,15 @@ function maybeApplyQuarterlyMaintenance(int $userId): void
     }
 
     // Regla de mantenimiento trimestral configurable desde settings.
-    $months = to_int_setting('maintenance_period_months', 3);
-    $maintainMin = to_int_setting('maintain_level_' . $level, $level === 2 ? 2 : 3);
+    $settings = maintenance_settings_for_level($level);
 
     $visitsStmt = db()->prepare('SELECT COUNT(*) AS c FROM visits WHERE user_id = :user_id AND visit_date >= DATE_SUB(NOW(), INTERVAL :months MONTH)');
     $visitsStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
-    $visitsStmt->bindValue(':months', $months, PDO::PARAM_INT);
+    $visitsStmt->bindValue(':months', $settings['period_months'], PDO::PARAM_INT);
     $visitsStmt->execute();
     $recentVisits = (int) ($visitsStmt->fetch()['c'] ?? 0);
 
-    if ($recentVisits >= $maintainMin) {
+    if ($recentVisits >= $settings['minimum_visits']) {
         return;
     }
 
@@ -261,6 +354,8 @@ function maybeApplyQuarterlyMaintenance(int $userId): void
         'new_level' => $newLevel,
         'id' => $userId,
     ]);
+
+    logLevelEvent($userId, $level, $newLevel, 'quarterly_maintenance', $recentVisits, $settings['period_months']);
 
     error_log(sprintf('PaseEvita maintenance user=%d level=%d->%d recentVisits=%d', $userId, $level, $newLevel, $recentVisits));
 }
@@ -410,6 +505,22 @@ function userRecentHistory(int $userId, int $limit = 8): array
 function userRedemptionHistory(int $userId, int $limit = 8): array
 {
     $stmt = db()->prepare('SELECT r.redeemed_at, r.notes, b.title, u.name AS staff_name FROM redemptions r INNER JOIN benefits b ON b.id = r.benefit_id LEFT JOIN users u ON u.id = r.staff_id WHERE r.user_id = :user_id ORDER BY r.redeemed_at DESC LIMIT :lim');
+    $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll();
+}
+
+function userLevelEvents(int $userId, int $limit = 8): array
+{
+    $stmt = db()->prepare(
+        'SELECT previous_level, new_level, reason, recent_visits, maintenance_period_months, created_at
+         FROM level_events
+         WHERE user_id = :user_id
+         ORDER BY created_at DESC
+         LIMIT :lim'
+    );
     $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
     $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
     $stmt->execute();
