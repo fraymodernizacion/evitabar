@@ -156,6 +156,6 @@ require __DIR__ . '/../includes/header.php';
     <a class="btn btn-ghost" href="/admin/logout.php">Salir</a>
 </section>
 
-<script src="/lib/scanner/barcode-scanner.js"></script>
-<script src="/public/assets/js/scan.js" defer></script>
+<script src="<?= e(asset_url('/lib/scanner/barcode-scanner.js')) ?>"></script>
+<script src="<?= e(asset_url('/public/assets/js/scan.js')) ?>" defer></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

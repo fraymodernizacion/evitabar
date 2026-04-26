@@ -22,17 +22,18 @@ $flashes = get_flashes();
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0f1b2d">
     <title><?= e($pageTitle) ?></title>
-    <link rel="manifest" href="/public/manifest.json">
-    <link rel="icon" type="image/svg+xml" href="/public/assets/icons/favicon.svg">
-    <link rel="apple-touch-icon" href="/public/assets/icons/icon.svg">
-    <link rel="stylesheet" href="/public/assets/css/styles.css">
+    <meta name="app-version" content="<?= e(app_version()) ?>">
+    <link rel="manifest" href="<?= e(asset_url('/public/manifest.json')) ?>">
+    <link rel="icon" type="image/svg+xml" href="<?= e(asset_url('/public/assets/icons/favicon.svg')) ?>">
+    <link rel="apple-touch-icon" href="<?= e(asset_url('/public/assets/icons/icon.svg')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('/public/assets/css/styles.css')) ?>">
 </head>
-<body class="<?= e($bodyClass) ?>">
+<body class="<?= e($bodyClass) ?>" data-app-version="<?= e(app_version()) ?>">
 <div class="app-shell">
     <header class="topbar">
         <div class="brand-lockup">
             <div class="logo-frame" aria-hidden="true">
-                <img src="/public/assets/images/logo-evita-bar.png" alt="">
+                <img src="<?= e(asset_url('/public/assets/images/logo-evita-bar.png')) ?>" alt="">
             </div>
             <div>
                 <p class="brand-kicker">Evita Bar</p>

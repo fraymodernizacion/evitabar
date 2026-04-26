@@ -3,10 +3,66 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/app.php';
 
 function e(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+function app_config(): array
+{
+    static $config = null;
+
+    if ($config === null) {
+        $config = require __DIR__ . '/../config/app.php';
+    }
+
+    return $config;
+}
+
+function app_version(): string
+{
+    static $version = null;
+
+    if ($version !== null) {
+        return $version;
+    }
+
+    $config = app_config();
+    $candidates = [
+        __DIR__ . '/../config/app.php',
+        __DIR__ . '/../includes/functions.php',
+        __DIR__ . '/../includes/header.php',
+        __DIR__ . '/../includes/footer.php',
+        __DIR__ . '/../public/assets/css/styles.css',
+        __DIR__ . '/../public/assets/js/app.js',
+        __DIR__ . '/../public/sw.js',
+    ];
+
+    $mtime = 0;
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate)) {
+            $mtime = max($mtime, (int) filemtime($candidate));
+        }
+    }
+
+    $version = $mtime > 0 ? (string) $mtime : (string) ($config['version'] ?? '1.0.0');
+
+    return $version;
+}
+
+function asset_url(string $path): string
+{
+    $path = '/' . ltrim($path, '/');
+    $filesystemPath = __DIR__ . '/..' . $path;
+
+    $version = app_version();
+    if (is_file($filesystemPath)) {
+        $version = (string) filemtime($filesystemPath);
+    }
+
+    return $path . '?v=' . rawurlencode($version);
 }
 
 function setting(string $key, ?string $default = null): ?string

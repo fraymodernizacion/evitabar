@@ -1,6 +1,8 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/public/sw.js').catch(() => {});
+    const version = document.documentElement.dataset.appVersion || '';
+    const swUrl = version ? `/public/sw.js?v=${encodeURIComponent(version)}` : '/public/sw.js';
+    navigator.serviceWorker.register(swUrl).catch(() => {});
   });
 }
 

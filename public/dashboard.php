@@ -49,7 +49,7 @@ require __DIR__ . '/../includes/header.php';
         <div class="phone-screen">
             <div class="screen-brand-wrap">
                 <div class="logo-frame logo-frame-screen" aria-hidden="true">
-                    <img src="/public/assets/images/logo-evita-bar.png" alt="">
+                    <img src="<?= e(asset_url('/public/assets/images/logo-evita-bar.png')) ?>" alt="">
                 </div>
             </div>
 
