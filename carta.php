@@ -154,19 +154,19 @@ declare(strict_types=1);
 
   <main class="reader">
     <article class="page">
-      <img src="/public/assets/landing/menu/page-1.jpg" alt="Carta de Evita Bar, página 1">
+      <img src="/public/assets/landing/menu/page-1.png" alt="Carta de Evita Bar, página 1">
       <div class="page-label">Página 1</div>
     </article>
     <article class="page">
-      <img src="/public/assets/landing/menu/page-2.jpg" alt="Carta de Evita Bar, página 2">
+      <img src="/public/assets/landing/menu/page-2.png" alt="Carta de Evita Bar, página 2">
       <div class="page-label">Página 2</div>
     </article>
     <article class="page">
-      <img src="/public/assets/landing/menu/page-3.jpg" alt="Carta de Evita Bar, página 3">
+      <img src="/public/assets/landing/menu/page-3.png" alt="Carta de Evita Bar, página 3">
       <div class="page-label">Página 3</div>
     </article>
     <article class="page">
-      <img src="/public/assets/landing/menu/page-4.jpg" alt="Carta de Evita Bar, página 4">
+      <img src="/public/assets/landing/menu/page-4.png" alt="Carta de Evita Bar, página 4">
       <div class="page-label">Página 4</div>
     </article>
   </main>

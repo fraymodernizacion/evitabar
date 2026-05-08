@@ -623,7 +623,7 @@ declare(strict_types=1);
         <h2 class="fade-in" data-reveal>Sabores de casa, con identidad propia</h2>
         <p class="menu-lead fade-in" data-reveal>Una primera mirada a la carta de Evita Bar.</p>
         <a class="menu-preview fade-in" data-reveal href="/carta.php" aria-label="Abrir la carta completa de Evita Bar">
-          <img src="/public/assets/landing/menu/page-1.jpg" alt="Vista previa de la carta de Evita Bar">
+          <img src="/public/assets/landing/menu/page-1.png" alt="Vista previa de la carta de Evita Bar">
           <span class="menu-preview-label">Abrir carta completa</span>
         </a>
       </div>
